@@ -1,0 +1,164 @@
+#include <GL/glut.h>
+#include <stdio.h>
+#include <stdbool.h>
+#define WIDTH 800
+#define HEIGHT 600
+// Viewport boundaries
+int xmin = 200, ymin = 150, xmax = 600, ymax = 450;
+// Polygon variables
+#define MAX_POINTS 10
+int polyPoints[MAX_POINTS][2];
+int pointCount = 0;
+bool polygonComplete = false;
+// Region codes
+const int INSIDE = 0; // 0000
+const int LEFT = 1; // 0001
+const int RIGHT = 2; // 0010
+const int BOTTOM = 4; // 0100
+const int TOP = 8; // 1000
+// Compute region code for a point
+int computeCode(int x, int y) {
+int code = INSIDE;
+if (x < xmin) code |= LEFT;
+else if (x > xmax) code |= RIGHT;
+if (y < ymin) code |= BOTTOM;
+else if (y > ymax) code |= TOP;
+return code;
+}
+// Cohen-Sutherland line clipping algorithm
+void cohenSutherlandClip(int x1, int y1, int x2, int y2) {
+int code1 = computeCode(x1, y1);
+int code2 = computeCode(x2, y2);
+bool accept = false;
+while (true) {
+if (!(code1 | code2)) { // Both points inside
+accept = true;
+break;
+} else if (code1 & code2) { // Both points outside same region
+break;
+} else {
+int code_out = code1 ? code1 : code2;
+int x, y;
+// Find intersection point
+if (code_out & TOP) {
+x = x1 + (x2 - x1) * (ymax - y1) / (y2 - y1);
+y = ymax;
+} else if (code_out & BOTTOM) {
+x = x1 + (x2 - x1) * (ymin - y1) / (y2 - y1);
+y = ymin;
+
+} else if (code_out & RIGHT) {
+y = y1 + (y2 - y1) * (xmax - x1) / (x2 - x1);
+x = xmax;
+} else if (code_out & LEFT) {
+y = y1 + (y2 - y1) * (xmin - x1) / (x2 - x1);
+x = xmin;
+}
+// Replace outside point with intersection point
+if (code_out == code1) {
+x1 = x;
+y1 = y;
+code1 = computeCode(x1, y1);
+} else {
+x2 = x;
+y2 = y;
+code2 = computeCode(x2, y2);
+}
+}
+}
+if (accept) {
+glColor3f(0.0, 1.0, 0.0); // Green for clipped lines
+glBegin(GL_LINES);
+glVertex2i(x1, y1);
+glVertex2i(x2, y2);
+glEnd();
+}
+}
+void drawViewport() {
+glColor3f(1.0, 1.0, 1.0);
+glBegin(GL_LINE_LOOP);
+glVertex2i(xmin, ymin);
+glVertex2i(xmax, ymin);
+glVertex2i(xmax, ymax);
+glVertex2i(xmin, ymax);
+glEnd();
+}
+void drawPolygon() {
+if (pointCount < 2) return;
+glColor3f(1.0, 0.0, 0.0); // Red for original polygon
+glBegin(GL_LINE_LOOP);
+for (int i = 0; i < pointCount; i++) {
+glVertex2iv(polyPoints[i]);
+}
+glEnd();
+}
+void clipPolygon() {
+if (pointCount < 3) return;
+for (int i = 0; i < pointCount; i++) {
+int next = (i + 1) % pointCount;
+cohenSutherlandClip(polyPoints[i][0], polyPoints[i][1],
+polyPoints[next][0], polyPoints[next][1]);
+}
+}
+void display() {
+
+glClear(GL_COLOR_BUFFER_BIT);
+drawViewport();
+drawPolygon();
+if (polygonComplete) {
+clipPolygon();
+}
+glutSwapBuffers();
+}
+void mouse(int button, int state, int x, int y) {
+y = HEIGHT - y; // Flip y coordinate
+if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+if (!polygonComplete) {
+if (pointCount < MAX_POINTS) {
+polyPoints[pointCount][0] = x;
+polyPoints[pointCount][1] = y;
+pointCount++;
+glutPostRedisplay();
+}
+}
+}
+}
+void keyboard(unsigned char key, int x, int y) {
+switch (key) {
+case 'c': // Complete polygon
+polygonComplete = true;
+break;
+case 'r': // Reset
+pointCount = 0;
+polygonComplete = false;
+break;
+case 'q': // Quit
+exit(0);
+}
+glutPostRedisplay();
+}
+void init() {
+glClearColor(0.0, 0.0, 0.0, 1.0);
+glMatrixMode(GL_PROJECTION);
+glLoadIdentity();
+gluOrtho2D(0, WIDTH, 0, HEIGHT);
+glMatrixMode(GL_MODELVIEW);
+}
+int main(int argc, char** argv) {
+glutInit(&argc, argv);
+glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+glutInitWindowSize(WIDTH, HEIGHT);
+glutCreateWindow("Cohen-Sutherland Polygon Clipping");
+init();
+printf("Instructions:\n");
+printf("1. Left-click to add polygon vertices\n");
+printf("2. Press 'c' to complete the polygon and clip it\n");
+printf("3. Press 'r' to reset\n");
+
+printf("4. Press 'q' to quit\n");
+glutDisplayFunc(display);
+glutMouseFunc(mouse);
+glutKeyboardFunc(keyboard);
+glutMainLoop();
+return 0;
+}
