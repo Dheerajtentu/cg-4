@@ -11,7 +11,7 @@ return;
 float x12 = (x1 + x2) / 2;
 float y12 = (y1 + y2) / 2;
 float x23 = (x2 + x3) / 2;
-float y23 = (y1 + y3) / 2;
+float y23 = (y2 + y3) / 2;
 float x34 = (x3 + x4) / 2;
 float y34 = (y3 + y4) / 2;
 float x123 = (x12 + x23) / 2;
