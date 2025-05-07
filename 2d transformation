@@ -1,0 +1,112 @@
+#include <GL/glut.h>
+#include <cmath>
+#include <iostream>
+using namespace std;
+// Window dimensions
+const int WIDTH = 800;
+const int HEIGHT = 600;
+// Object vertices (a simple triangle)
+GLfloat vertices[][2] = {
+{100.0, 100.0},
+{200.0, 100.0},
+{150.0, 200.0}
+};
+// Transformation variables
+float scaleX = 1.0, scaleY = 1.0;
+float angle = 0.0;
+float pivotX = 150.0, pivotY = 150.0;
+bool reflectX = false, reflectY = false;
+void drawObject() {
+glBegin(GL_TRIANGLES);
+for (int i = 0; i < 3; i++) {
+glVertex2fv(vertices[i]);
+}
+glEnd();
+}
+void display() {
+glClear(GL_COLOR_BUFFER_BIT);
+// Draw original object in white
+glColor3f(1.0, 1.0, 1.0);
+drawObject();
+// Apply transformations
+glPushMatrix();
+// 1. Scaling
+glScalef(scaleX, scaleY, 1.0);
+// 2. Rotation about arbitrary point
+glTranslatef(pivotX, pivotY, 0.0);
+glRotatef(angle, 0.0, 0.0, 1.0);
+glTranslatef(-pivotX, -pivotY, 0.0);
+// 3. Reflection
+if (reflectX) glScalef(-1.0, 1.0, 1.0);
+if (reflectY) glScalef(1.0, -1.0, 1.0);
+// Draw transformed object in red
+glColor3f(1.0, 0.0, 0.0);
+drawObject();
+glPopMatrix();
+glutSwapBuffers();
+}
+void keyboard(unsigned char key, int x, int y) {
+switch (key) {
+case 's': // Scale up
+scaleX += 0.1;
+scaleY += 0.1;
+break;
+
+case 'S': // Scale down
+scaleX -= 0.1;
+scaleY -= 0.1;
+break;
+case 'r': // Rotate clockwise
+angle += 5.0;
+break;
+case 'R': // Rotate counter-clockwise
+angle -= 5.0;
+break;
+case 'x': // Toggle X-axis reflection
+reflectX = !reflectX;
+break;
+case 'y': // Toggle Y-axis reflection
+reflectY = !reflectY;
+break;
+case 'p': // Change pivot point
+pivotX = x;
+pivotY = HEIGHT - y;
+cout << "New pivot point: (" << pivotX << ", " << pivotY << ")" << endl;
+break;
+case ' ': // Reset all transformations
+scaleX = scaleY = 1.0;
+angle = 0.0;
+reflectX = reflectY = false;
+break;
+case 27: // ESC key to exit
+exit(0);
+}
+glutPostRedisplay();
+}
+void init() {
+glClearColor(0.0, 0.0, 0.0, 1.0);
+glMatrixMode(GL_PROJECTION);
+glLoadIdentity();
+gluOrtho2D(0, WIDTH, 0, HEIGHT);
+glMatrixMode(GL_MODELVIEW);
+}
+int main(int argc, char** argv) {
+glutInit(&argc, argv);
+glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+glutInitWindowSize(WIDTH, HEIGHT);
+glutCreateWindow("2D Transformations");
+init();
+glutDisplayFunc(display);
+glutKeyboardFunc(keyboard);
+cout << "2D Transformations Demo" << endl;
+cout << "Controls:" << endl;
+cout << "s/S - Scale up/down" << endl;
+cout << "r/R - Rotate clockwise/counter-clockwise" << endl;
+cout << "x - Toggle X-axis reflection" << endl;
+cout << "y - Toggle Y-axis reflection" << endl;
+cout << "p - Set pivot point (click location)" << endl;
+cout << "SPACE - Reset all transformations" << endl;
+cout << "ESC - Exit" << endl;
+glutMainLoop();
+return 0;
+}
