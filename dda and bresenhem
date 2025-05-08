@@ -1,368 +1,240 @@
-#include<GL/glut.h>
-#include<GL/glu.h>
-#include<iostream>
-#include<math.h>
+#include <GL/glut.h>
+#include <GL/glu.h>
+#include <iostream>
+#include <math.h>
 #define h 700
 #define w 700
+
 using namespace std;
-GLint xi,xii,yi,yii;
-void setpixel(GLint x, GLint y)
-{
-glColor3f(0.0,0.0,1.0);
-glBegin(GL_POINTS);
-glVertex2f(x,y);
-glEnd();
-glFlush();
+
+// Global variables to store starting and ending coordinates of the line
+GLint xi, xii, yi, yii;
+
+// Function to set a pixel at a given coordinate
+void setpixel(GLint x, GLint y) {
+    glColor3f(0.0, 0.0, 1.0);  // Blue color
+    glBegin(GL_POINTS);
+    glVertex2f(x, y);
+    glEnd();
+    glFlush();
 }
-void initialize()
-{
-glClearColor(0.6,0.6,0.6,0.0);
-glClear(GL_COLOR_BUFFER_BIT);
-//glColor3f(1.0f,0.0f,0.0f);
-//glPointSize(4.0);
-glMatrixMode(GL_PROJECTION);
-glLoadIdentity();
-gluOrtho2D(-w/2,w/2,-h/2,h/2);
+
+// OpenGL setup function
+void initialize() {
+    glClearColor(0.6, 0.6, 0.6, 0.0);        // Background color: gray
+    glClear(GL_COLOR_BUFFER_BIT);           // Clear the screen
+    glMatrixMode(GL_PROJECTION);            // Set projection matrix
+    glLoadIdentity();                       // Reset matrix
+    gluOrtho2D(-w/2, w/2, -h/2, h/2);        // Set orthographic projection
 }
-void choice()
-{
-int i;
-glPointSize(2.0);
-for(i=-w; i<w; i++)
-{
-setpixel(0,i);
-setpixel(i,0);
+
+// Draw coordinate axis
+void choice() {
+    glPointSize(2.0);
+    for (int i = -w; i < w; i++) {
+        setpixel(0, i);  // Y-axis
+        setpixel(i, 0);  // X-axis
+    }
 }
-}
-class line
-{
+
+// Line class containing DDA and Bresenham line drawing methods
+class line {
 public:
-void dda(int item)
-{
-GLfloat dx,dy,step,x,y;
-GLfloat xinc,yinc;
-int i;
-dx=xii-xi;
-dy=yii-yi;
-if(abs(dx)>=abs(dy))
-step=abs(dx);
-else
-step=abs(dy);
-xinc=(float)dx/step;
-yinc=(float)dy/step;
-x=xi;
-y=yi;
-setpixel(x,y);
-for(i=1; i<=step; i++)
-{
-x=x+xinc;
-y=y+yinc;
-xi=x+0.5;
-yi=y+0.5;
-if(item==1)
-{
-setpixel(xi,yi);
-}
-if(item==2)
-{
-if(i%10<5)
-{
-setpixel(xi,yi);
+    // DDA Line Drawing Algorithm
+    void dda(int item) {
+        GLfloat dx = xii - xi;
+        GLfloat dy = yii - yi;
+        GLfloat step = (abs(dx) >= abs(dy)) ? abs(dx) : abs(dy);
+        GLfloat xinc = dx / step;
+        GLfloat yinc = dy / step;
+        float x = xi, y = yi;
+        setpixel(x, y);
 
-}
-}
-if(item==3)
-{
-if(i%9>=2 && i%9!=7)
-{
-setpixel(xi,yi);
-}
-}
-if(item==4)
-{
-glPointSize(4.0);
-setpixel(xi,yi);
-}
-}
-}
-void bresenham(int item)
-{
-int dx,dy,P,tmp;
-int i=1;
-if(xii<xi && yii<yi)
-{
-tmp=xi;
-xi=xii;
-xii=tmp;
-tmp=yi;
-yi=yii;
-yii=tmp;
-}
-dx=(xii-xi);
-dy=(yii-yi);
-if(dy<=dx&&dy>0)
-{
-dx=abs(dx);
-dy=abs(dy);
-P=(2*dy)-dx;
-setpixel(xi,yi);
-int x=xi;
-int y=yi;
-while(x<=xii)
-{
-x++;
-if(P<0)
-{
-P=P+(2*dy);
-}
-else
-{
-y++;
-P=P+(2*dy)-(2*dx);
-}
-if(item==1)
-{
-setpixel(x,y);
-}
-if(item==2 && i%10<5)
-{
-setpixel(x,y);
-}
-if(item==3 && (i%9>=2 && i%9!=7))
-{
-setpixel(x,y);
-}
-if(item==4)
-{
-glPointSize(4.0);
-setpixel(x,y);
-}
-i++;
-}
-}
-else if(dy>dx&&dy>0)
-{
-dx=abs(dx);
-dy=abs(dy);
-P=(2*dx)-dy;
-setpixel(xi,yi);
-int x=xi;
+        for (int i = 1; i <= step; i++) {
+            x += xinc;
+            y += yinc;
+            xi = x + 0.5;
+            yi = y + 0.5;
 
-int y=yi;
-while(y<=yii)
-{
-y++;
-if(P<0)
-{
-P=P+(2*dx);
-}
-else
-{
-x++;
-P=P+(2*dx)-(2*dy);
-}
-if(item==1)
-{
-setpixel(x,y);
-}
-if(item==2 && i%10<5)
-{
-setpixel(x,y);
-}
-if(item==3 && (i%9>=2 && i%9!=7))
-{
-setpixel(x,y);
-}
-if(item==4)
-{
-glPointSize(4.0);
-setpixel(x,y);
-}
-i++;
-}
-}
-else if(dy>=-dx)
-{
-dx=abs(dx);
-dy=abs(dy);
-P=(2*dy)-dx;
-setpixel(xi,yi);
-int x=xi;
-int y=yi;
-while(x<=xii)
-{
-x++;
-if(P<0)
-{
-P=P+(2*dy);
-}
-else
-{
-y--;
-P=P+(2*dy)-(2*dx);
-}
-if(item==1)
-{
-setpixel(x,y);
-}
-if(item==2 && i%10<5)
-{
-setpixel(x,y);
-}
-if(item==3 && (i%9>=2 && i%9!=7))
-{
-setpixel(x,y);
-}
-if(item==4)
-{
-glPointSize(4.0);
-setpixel(x,y);
-}
-i++;
-}
-}
-else if(dy<-dx)
-{
-dx=abs(dx);
-dy=abs(dy);
-P=(2*dy)-dx;
-setpixel(xi,yi);
-int x=xi;
-int y=yi;
+            // 1: Simple Line
+            if (item == 1) setpixel(xi, yi);
+            // 2: Dashed Line
+            if (item == 2 && i % 10 < 5) setpixel(xi, yi);
+            // 3: Dash-dot Line
+            if (item == 3 && (i % 9 >= 2 && i % 9 != 7)) setpixel(xi, yi);
+            // 4: Thick Line
+            if (item == 4) {
+                glPointSize(4.0);
+                setpixel(xi, yi);
+            }
+        }
+    }
 
-while(y>=yii)
-{
-y--;
-if(P<0)
-{
-P=P+(2*dx);
-}
-else
-{
-x++;
-P=P+(2*dx)-(2*dy);
-}
-if(item==1)
-{
-setpixel(x,y);
-}
-if(item==2 && i%10<5)
-{
-setpixel(x,y);
-}
-if(item==3 && (i%9>=2 && i%9!=7))
-{
-setpixel(x,y);
-}
-if(item==4)
-{
-glPointSize(4.0);
-setpixel(x,y);
-}
-}
-}
-glFlush();
-}
+    // Bresenham's Line Drawing Algorithm
+    void bresenham(int item) {
+        int dx = xii - xi;
+        int dy = yii - yi;
+        int P, x = xi, y = yi, tmp, i = 1;
+
+        // Ensure drawing from left to right
+        if (xii < xi && yii < yi) {
+            tmp = xi; xi = xii; xii = tmp;
+            tmp = yi; yi = yii; yii = tmp;
+        }
+
+        // First Octant or similar slopes
+        if (dy <= dx && dy > 0) {
+            dx = abs(dx);
+            dy = abs(dy);
+            P = (2 * dy) - dx;
+            setpixel(x, y);
+            while (x <= xii) {
+                x++;
+                if (P < 0) P += 2 * dy;
+                else { y++; P += 2 * (dy - dx); }
+
+                if (item == 1) setpixel(x, y);
+                if (item == 2 && i % 10 < 5) setpixel(x, y);
+                if (item == 3 && (i % 9 >= 2 && i % 9 != 7)) setpixel(x, y);
+                if (item == 4) {
+                    glPointSize(4.0);
+                    setpixel(x, y);
+                }
+                i++;
+            }
+        }
+
+        // More vertical line
+        else if (dy > dx && dy > 0) {
+            dx = abs(dx);
+            dy = abs(dy);
+            P = (2 * dx) - dy;
+            setpixel(x, y);
+            while (y <= yii) {
+                y++;
+                if (P < 0) P += 2 * dx;
+                else { x++; P += 2 * (dx - dy); }
+
+                if (item == 1) setpixel(x, y);
+                if (item == 2 && i % 10 < 5) setpixel(x, y);
+                if (item == 3 && (i % 9 >= 2 && i % 9 != 7)) setpixel(x, y);
+                if (item == 4) {
+                    glPointSize(4.0);
+                    setpixel(x, y);
+                }
+                i++;
+            }
+        }
+
+        // Slopes like -45 degrees
+        else if (dy >= -dx) {
+            dx = abs(dx);
+            dy = abs(dy);
+            P = (2 * dy) - dx;
+            setpixel(x, y);
+            while (x <= xii) {
+                x++;
+                if (P < 0) P += 2 * dy;
+                else { y--; P += 2 * (dy - dx); }
+
+                if (item == 1) setpixel(x, y);
+                if (item == 2 && i % 10 < 5) setpixel(x, y);
+                if (item == 3 && (i % 9 >= 2 && i % 9 != 7)) setpixel(x, y);
+                if (item == 4) {
+                    glPointSize(4.0);
+                    setpixel(x, y);
+                }
+                i++;
+            }
+        }
+
+        // Slopes less than -45 degrees
+        else if (dy < -dx) {
+            dx = abs(dx);
+            dy = abs(dy);
+            P = (2 * dy) - dx;
+            setpixel(x, y);
+            while (y >= yii) {
+                y--;
+                if (P < 0) P += 2 * dx;
+                else { x++; P += 2 * (dx - dy); }
+
+                if (item == 1) setpixel(x, y);
+                if (item == 2 && i % 10 < 5) setpixel(x, y);
+                if (item == 3 && (i % 9 >= 2 && i % 9 != 7)) setpixel(x, y);
+                if (item == 4) {
+                    glPointSize(4.0);
+                    setpixel(x, y);
+                }
+                i++;
+            }
+        }
+
+        glFlush();
+    }
 };
-line l;
-void keyboard(unsigned char key, int x, int y)
-{
-if(key==27)
-exit(0);
-else
-cout<<"You entered the"<<key;
-}
-void menu(int item)
-{
-if(item==1)
-{
-l.dda(1);
-}
-if(item==2)
-{
-l.dda(2);
-}
-if(item==3)
-{
-l.dda(3);
-}
-if(item==4)
-{
-l.dda(4);
-}
-if(item==5)
-{
-l.bresenham(1);
-}
-if(item==6)
-{
-l.bresenham(2);
-}
-if(item==7)
-{
-l.bresenham(3);
-}
-if(item==8)
-{
-l.bresenham(4);
-}
-if(item==9)
-{
 
-exit(0);
+line l;  // Create instance of line class
+
+// Keyboard event handler
+void keyboard(unsigned char key, int x, int y) {
+    if (key == 27) exit(0); // ESC key to exit
+    else cout << "You entered the " << key << "\n";
 }
+
+// Menu handler for selecting algorithms/styles
+void menu(int item) {
+    switch(item) {
+        case 1: l.dda(1); break;
+        case 2: l.dda(2); break;
+        case 3: l.dda(3); break;
+        case 4: l.dda(4); break;
+        case 5: l.bresenham(1); break;
+        case 6: l.bresenham(2); break;
+        case 7: l.bresenham(3); break;
+        case 8: l.bresenham(4); break;
+        case 9: exit(0); break;
+    }
 }
-void mouse( int button, int state, int x, int y )
-{
-if( state == GLUT_DOWN )
-{
-if( button == GLUT_LEFT_BUTTON)
-{
-xi=x-350;
-yi=350-y;
-cout<<xi<<"\t";
-cout<<yi<<"\n";
-glPointSize(2.0);
-glBegin(GL_POINTS);
-glVertex2i(xi,yi);
-glEnd();
-glFlush();
+
+// Mouse input: Left click for first point, Right click for second
+void mouse(int button, int state, int x, int y) {
+    if (state == GLUT_DOWN) {
+        if (button == GLUT_LEFT_BUTTON) {
+            xi = x - 350;
+            yi = 350 - y;
+            cout << xi << "\t" << yi << "\n";
+            glBegin(GL_POINTS); glVertex2i(xi, yi); glEnd(); glFlush();
+        } else if (button == GLUT_RIGHT_BUTTON) {
+            xii = x - 350;
+            yii = 350 - y;
+            cout << xii << "\t" << yii << "\n";
+            glBegin(GL_POINTS); glVertex2i(xii, yii); glEnd(); glFlush();
+        }
+    }
 }
-if( button == GLUT_RIGHT_BUTTON)
-{
-xii=x-350;
-yii=350-y;
-cout<<xii<<"\t";
-cout<<yii<<"\n";
-glPointSize(2.0);
-glBegin(GL_POINTS);
-glVertex2i(xii,yii);
-glEnd();
-glFlush();
-}
-}
-}
-int main(int argc, char **argv)
-{
-glutInit(&argc,argv);
-glutInitWindowSize(h,w);
-glutInitWindowPosition(100,0);
-glutCreateWindow("Line DDA and Bresenham Here!!");
-initialize();
-glutDisplayFunc(choice);
-glutMouseFunc(mouse);
-glutKeyboardFunc(keyboard);
-glutCreateMenu(menu);
-glutAddMenuEntry("DDA_SIMPLE",1);
-glutAddMenuEntry("DDA_DASH",2);
-glutAddMenuEntry("DDA_DASH DOT",3);
-glutAddMenuEntry("DDA_THICK",4);
-glutAddMenuEntry("BRE_SIMPLE",5);
-glutAddMenuEntry("BRE_DASH",6);
-glutAddMenuEntry("BRE_DASH DOT",7);
-glutAddMenuEntry("BRE_THICK",8);
-glutAddMenuEntry("EXIT",9);
-glutAttachMenu(GLUT_MIDDLE_BUTTON);
-glutMainLoop();
-return 0;
+
+// Main function
+int main(int argc, char **argv) {
+    glutInit(&argc, argv);
+    glutInitWindowSize(h, w);
+    glutInitWindowPosition(100, 0);
+    glutCreateWindow("Line DDA and Bresenham Here!!");
+    initialize();
+    glutDisplayFunc(choice);            // Draw coordinate axes
+    glutMouseFunc(mouse);              // Mouse input for endpoints
+    glutKeyboardFunc(keyboard);        // Keyboard input for ESC
+    glutCreateMenu(menu);              // Create context menu
+    glutAddMenuEntry("DDA_SIMPLE", 1);
+    glutAddMenuEntry("DDA_DASH", 2);
+    glutAddMenuEntry("DDA_DASH DOT", 3);
+    glutAddMenuEntry("DDA_THICK", 4);
+    glutAddMenuEntry("BRE_SIMPLE", 5);
+    glutAddMenuEntry("BRE_DASH", 6);
+    glutAddMenuEntry("BRE_DASH DOT", 7);
+    glutAddMenuEntry("BRE_THICK", 8);
+    glutAddMenuEntry("EXIT", 9);
+    glutAttachMenu(GLUT_MIDDLE_BUTTON); // Attach menu to middle click
+    glutMainLoop();                      // Start the loop
+    return 0;
 }
