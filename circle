@@ -1,142 +1,169 @@
-#include<GL/glut.h>
-#include<GL/glu.h>
-#include<iostream>
-#include<math.h>
+#include <GL/glut.h>   // GLUT library for OpenGL GUI toolkit
+#include <GL/glu.h>    // OpenGL Utility library
+#include <iostream>    // For standard input/output
+#include <math.h>      // For mathematical operations (not used in this code)
 using namespace std;
-GLint xi,yi,r,choice=1;
+
+// Global variables to store center and radius of the circle and the color choice
+GLint xi, yi, r, choice = 1;
+
+// This function sets the pixel at (x, y) with a color based on the selected menu choice
 void setpixel(GLint x, GLint y)
 {
-if(choice==1)
-{
-glColor3f(1.0,0.0,0.0);
-}
-else if(choice==2)
-{
-glColor3f(0.0,0.0,0.0);
-}
-else if(choice==3)
-{
-glColor3f(1.0,1.0,0.0);
-}
-else if(choice==4)
-{
-glColor3f(0.4,0.9,0.2);
-}
-else if(choice==5)
-{
-glColor3f(0.0,0.0,1.0);
-}
-glBegin(GL_POINTS);
-glVertex2f(x,y);
-glEnd();
-glFlush();
-}
-void myDisplay(void)
-{
-/*glClear(GL_COLOR_BUFFER_BIT);
-glFlush();*/
-}
-void drawCircle(int xc, int yc, int x, int y)
-{
-setpixel(xc+x, yc+y);
-setpixel(xc-x, yc+y);
-setpixel(xc+x, yc-y);
-setpixel(xc-x, yc-y);
-setpixel(xc-y, yc+x);
-setpixel(xc-y, yc-x);
-setpixel(xc+y, yc+x);
-setpixel(xc+y, yc-x);
-}
-void initialize()
-{
-glClearColor(0.6,0.6,0.6,0.0);
-glClear(GL_COLOR_BUFFER_BIT);
-//glColor3f(1.0f,0.0f,0.0f);
-glPointSize(5.0);
-glMatrixMode(GL_PROJECTION);
-glLoadIdentity();
-gluOrtho2D(0.0,640.0,0.0,480.0);
+    // Set color based on user choice
+    if (choice == 1)
+        glColor3f(1.0, 0.0, 0.0);  // Red
+    else if (choice == 2)
+        glColor3f(0.0, 0.0, 0.0);  // Black
+    else if (choice == 3)
+        glColor3f(1.0, 1.0, 0.0);  // Yellow
+    else if (choice == 4)
+        glColor3f(0.4, 0.9, 0.2);  // Green
+    else if (choice == 5)
+        glColor3f(0.0, 0.0, 1.0);  // Blue
+
+    // Draw the point
+    glBegin(GL_POINTS);
+    glVertex2f(x, y);
+    glEnd();
+    glFlush(); // Force execution of OpenGL commands
 }
 
+// Display function — currently not used
+void myDisplay(void)
+{
+    // Intentionally commented
+    // glClear(GL_COLOR_BUFFER_BIT);
+    // glFlush();
+}
+
+// This function plots 8 symmetric points for each calculated (x, y) on the circle
+void drawCircle(int xc, int yc, int x, int y)
+{
+    setpixel(xc + x, yc + y);
+    setpixel(xc - x, yc + y);
+    setpixel(xc + x, yc - y);
+    setpixel(xc - x, yc - y);
+    setpixel(xc + y, yc + x);
+    setpixel(xc - y, yc + x);
+    setpixel(xc + y, yc - x);
+    setpixel(xc - y, yc - x);
+}
+
+// Initialization of OpenGL environment
+void initialize()
+{
+    glClearColor(0.6, 0.6, 0.6, 0.0);     // Set background color to light grey
+    glClear(GL_COLOR_BUFFER_BIT);        // Clear the color buffer
+    glPointSize(5.0);                    // Set point size
+    glMatrixMode(GL_PROJECTION);        // Select projection matrix
+    glLoadIdentity();                   // Reset projection matrix
+    gluOrtho2D(0.0, 640.0, 0.0, 480.0);  // Set 2D orthographic viewing region
+}
+
+// Circle class contains Bresenham's algorithm implementation
 class Circle
 {
 public:
-void BresCircle()
-{
-cout<<"Enter the value of radius :";
-cin>>r;
-GLint x = 0, y = r;
-GLint s = 3 - 2 * r;
-drawCircle(xi, yi, x, y);
-while (y >= x)
-{
-x++;
-if (s > 0)
-{
-y--;
-s = s + 4 * (x - y) + 10;
-}
-else
-s = s + 4 * x + 6;
-drawCircle(xi, yi, x, y);
-}
-}
+    // Bresenham's circle drawing algorithm
+    void BresCircle()
+    {
+        cout << "Enter the value of radius :";
+        cin >> r;  // Read radius from user
+
+        GLint x = 0, y = r;
+        GLint s = 3 - 2 * r;  // Initial decision parameter
+
+        drawCircle(xi, yi, x, y);  // Plot initial points
+
+        // Loop until y < x (since circle is symmetric in octants)
+        while (y >= x)
+        {
+            x++;
+            if (s > 0)
+            {
+                y--;
+                s = s + 4 * (x - y) + 10;
+            }
+            else
+            {
+                s = s + 4 * x + 6;
+            }
+            drawCircle(xi, yi, x, y);  // Plot new points
+        }
+    }
 };
+
+// Create an object of Circle class
 Circle l;
+
+// Keyboard callback to exit program when ESC key is pressed
 void keyboard(unsigned char key, int x, int y)
 {
-if(key==27)
-exit(0);
+    if (key == 27)  // ASCII for ESC
+        exit(0);
 }
-void mouse( int button, int state, int x, int y )
+
+// Mouse callback to set center of the circle on left-click
+void mouse(int button, int state, int x, int y)
 {
-if( state == GLUT_DOWN )
-{
-if( button == GLUT_LEFT_BUTTON)
-{
-xi=x;
-yi=480-y;
-cout<<xi<<"\t";
-cout<<yi<<"\n";
-glPointSize(2.0);
-glBegin(GL_POINTS);
-glVertex2i(xi,yi);
-glEnd();
-glFlush();
+    if (state == GLUT_DOWN)
+    {
+        if (button == GLUT_LEFT_BUTTON)
+        {
+            xi = x;             // Set global x coordinate
+            yi = 480 - y;       // Convert y from top-left to bottom-left origin
+            cout << xi << "\t" << yi << "\n";
+
+            glPointSize(2.0);
+            glBegin(GL_POINTS);
+            glVertex2i(xi, yi);  // Draw center point
+            glEnd();
+            glFlush();
+        }
+    }
 }
-}
-}
+
+// Menu handler for right-click menu
 void menu(int item)
 {
-choice = item;
-if(item==1 || item==2 || item==3 || item==4 || item==5)
-{
-l.BresCircle();
+    choice = item;  // Set color choice
+
+    if (item >= 1 && item <= 5)
+    {
+        l.BresCircle();  // Draw circle in chosen color
+    }
+    else if (item == 6)
+    {
+        exit(0);  // Exit program
+    }
 }
-if(item==6)
-{
-exit(0);
-}
-}
+
+// Main function: entry point
 int main(int argc, char **argv)
 {
-glutInit(&argc,argv);
+    glutInit(&argc, argv);  // Initialize GLUT
 
-glutInitWindowSize(640,480);
-glutInitWindowPosition(100,0);
-glutCreateWindow("Bresenham circle Drawing!!");
-initialize();
-glutDisplayFunc(myDisplay);
-glutMouseFunc(mouse);
-glutKeyboardFunc(keyboard);
-glutCreateMenu(menu);
-glutAddMenuEntry("Draw Red CIRCLE",1);
-glutAddMenuEntry("Draw Black CIRCLE",2);
-glutAddMenuEntry("Draw Yellow CIRCLE",3);
-glutAddMenuEntry("Draw Green CIRCLE",4);
-glutAddMenuEntry("Draw Blue CIRCLE",5);
-glutAddMenuEntry("EXIT",6);
-glutAttachMenu(GLUT_MIDDLE_BUTTON);
-glutMainLoop();
-return 0;
+    glutInitWindowSize(640, 480);           // Set window size
+    glutInitWindowPosition(100, 0);         // Set window position on screen
+    glutCreateWindow("Bresenham Circle Drawing!!");  // Create window with title
+
+    initialize();  // Call initialize
+
+    glutDisplayFunc(myDisplay);    // Set display callback
+    glutMouseFunc(mouse);          // Set mouse callback
+    glutKeyboardFunc(keyboard);    // Set keyboard callback
+
+    // Create menu and attach to middle mouse button
+    glutCreateMenu(menu);
+    glutAddMenuEntry("Draw Red CIRCLE", 1);
+    glutAddMenuEntry("Draw Black CIRCLE", 2);
+    glutAddMenuEntry("Draw Yellow CIRCLE", 3);
+    glutAddMenuEntry("Draw Green CIRCLE", 4);
+    glutAddMenuEntry("Draw Blue CIRCLE", 5);
+    glutAddMenuEntry("EXIT", 6);
+    glutAttachMenu(GLUT_MIDDLE_BUTTON);  // Use middle button for menu
+
+    glutMainLoop();  // Enter the event-processing loop
+    return 0;
 }
